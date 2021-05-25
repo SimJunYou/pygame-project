@@ -1,6 +1,6 @@
 import pygame as pg
 from player import Player
-from level import Platform
+from level import Level
 from constants import *
 
 # These only need to be initialized once throughout
@@ -9,10 +9,11 @@ clock = pg.time.Clock()
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 def init():
-    global milk, mocha, player_grp, platform_grp
+    global milk, mocha, player_grp, background, level
 
     # Clear the screen
     screen.fill(WHITE)
+    background = pg.image.load(BACKGROUND).convert()
 
     # Remake the game objects
     player_grp = pg.sprite.Group()
@@ -25,12 +26,11 @@ def init():
 
     milk.add_alt_surf(P1_ALT_SPRITE, P1_ALT_SIZE)
 
+    level = Level(LEVEL_1)
+    level.draw_tiles_onto_bg(background)
+
     # Add events
     pg.time.set_timer(HEAL, 1000)
-
-    for each_platform in PLATFORM_COORDS:
-        temp_platform = Platform(*each_platform)
-        platform_grp.add(temp_platform)
 
 def main():
     # Variable to keep the main loop running
@@ -58,9 +58,9 @@ def main():
         pressed_keys = pg.key.get_pressed()     
         for each_player in player_grp:
             each_player.update(pressed_keys)
-            hit_list = pg.sprite.spritecollide(each_player, platform_grp, False)
-            for each_plt in hit_list:
-                each_player.update_collision(each_plt, pressed_keys)
+            hit_list = pg.sprite.spritecollide(each_player, level.tiles, False)
+            for each_tile in hit_list:
+                each_player.update_collision(each_tile, pressed_keys)
 
         if not milk.isDamaged and pg.sprite.collide_circle(milk, mocha):
             milk.set_damaged()
@@ -69,9 +69,7 @@ def main():
                 running = False
 
         # Refresh and draw
-        screen.fill(WHITE)
-        for entity in platform_grp:
-            screen.blit(entity.surf, entity.rect)
+        screen.blit(background, (0,0))
         for entity in player_grp:
             screen.blit(entity.surf, entity.rect)
         FONT.render_to(screen, (40, 40),\

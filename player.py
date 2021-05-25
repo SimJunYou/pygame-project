@@ -5,7 +5,7 @@ class Player(pg.sprite.Sprite):
     def __init__(self, startX, startY, mvt, img, size, speeds):
         super(Player, self).__init__()
 
-        temp = pg.image.load(img).convert()
+        temp = pg.image.load(img).convert_alpha()
         temp.set_colorkey(BLACK, RLEACCEL)
         self.surf = pg.transform.scale(temp, size)
         self.rect = self.surf.get_rect()
@@ -16,9 +16,10 @@ class Player(pg.sprite.Sprite):
         self.yspeed = 0
         self.speeds = speeds
         self.canJump = False
+        self.inTile = False
+
         self.isDamaged = False
         self.health = 100
-
         self.hasAltVer = False
         self.inAltVer = False
 
@@ -29,7 +30,6 @@ class Player(pg.sprite.Sprite):
 
     def add_alt_surf(self, img, size):
         temp = pg.image.load(img).convert()
-        temp.set_colorkey(BLACK, RLEACCEL)
         self.alt_surf = pg.transform.scale(temp, size)
         self.hasAltVer = True
 
@@ -115,7 +115,7 @@ class Player(pg.sprite.Sprite):
                 self.surf.set_alpha(DMG_ALPHA)
 
     # For collisions with platforms only
-    def update_collision(self, plt, pressedKeys):
+    def update_collision(self, tile, pressedKeys):
         # Find previous location
         top = self.rect.top - self.yspeed
         bottom = self.rect.bottom - self.yspeed
@@ -123,20 +123,21 @@ class Player(pg.sprite.Sprite):
         right = self.rect.right - self.xspeed
 
         # On platform or on floor
-        if bottom <= plt.rect.top and not pressedKeys[self.D]:
-            self.rect.bottom = plt.rect.top
+        if bottom <= tile.rect.top and not pressedKeys[self.D]:
+            self.rect.bottom = tile.rect.top
             self.canJump = True # Only can jump if on a platform
             self.yspeed = 0
-
-        elif left >= plt.rect.right:
-            self.rect.left = plt.rect.right
+        '''
+        elif left >= tile.rect.right and tile.isRight():
+            self.rect.left = tile.rect.right
             if not pressedKeys[self.R]:
                 self.xspeed = 0
 
-        elif right <= plt.rect.left:
-            self.rect.right = plt.rect.left
+        elif right <= tile.rect.left and tile.isLeft():
+            self.rect.right = tile.rect.left
             if not pressedKeys[self.L]:
                 self.xspeed = 0
+        '''
 
     def set_damaged(self):
         if not self.isDamaged:
